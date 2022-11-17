@@ -14,8 +14,11 @@ from .permissions import IsAuthorOrReadOnly
 User = get_user_model()
 
 
-class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+class CreateListViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
     pass
 
 
@@ -81,8 +84,8 @@ class FollowViewSet(CreateListViewSet):
             user = self.get_user()
             following = self.get_following(serializer=serializer)
             obj = Follow.objects.filter(
-            user=user,
-            following=following
+                user=user,
+                following=following
             )
             if obj.exists():
                 data = {'following': 'You are already subscribed to this user'}
@@ -99,5 +102,3 @@ class FollowViewSet(CreateListViewSet):
             user=self.get_user(),
             following=self.get_following(serializer=serializer)
         )
-
- 
