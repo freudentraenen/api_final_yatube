@@ -71,10 +71,6 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         return data
 
-    #def create(self, validated_data):
-        #instance, _ = Follow.objects.get_or_create(**validated_data)
-        #return instance
-
     class Meta:
         fields = ('user', 'following')
         model = Follow

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 
-from posts.models import Post, Group, Follow
+from posts.models import Post, Group
 from .serializers import GroupSerializer, CommentSerializer
 from .serializers import PostSerializer, FollowSerializer
 from .permissions import IsAuthorOrReadOnly
