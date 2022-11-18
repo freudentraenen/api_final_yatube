@@ -14,14 +14,6 @@ from .permissions import IsAuthorOrReadOnly
 User = get_user_model()
 
 
-class CreateListViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
-    pass
-
-
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -52,7 +44,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         post = self.get_post()
-        new_queryset = post.comments
+        new_queryset = post.comments.all()
         return new_queryset
 
     def perform_create(self, serializer):
@@ -60,7 +52,11 @@ class CommentViewSet(viewsets.ModelViewSet):
             serializer.save(author=self.get_author(), post=self.get_post())
 
 
-class FollowViewSet(CreateListViewSet):
+class FollowViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
@@ -75,24 +71,12 @@ class FollowViewSet(CreateListViewSet):
 
     def get_queryset(self):
         user = self.get_user()
-        new_queryset = user.follows
+        new_queryset = user.follows.all()
         return new_queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            user = self.get_user()
-            following = self.get_following(serializer=serializer)
-            obj = Follow.objects.filter(
-                user=user,
-                following=following
-            )
-            if obj.exists():
-                data = {'following': 'You are already subscribed to this user'}
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
-            elif user == following:
-                data = {'following': 'You can not subscribe to yourself'}
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

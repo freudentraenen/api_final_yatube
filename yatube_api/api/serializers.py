@@ -54,9 +54,26 @@ class FollowSerializer(serializers.ModelSerializer):
         queryset=User.objects.all()
     )
 
-    def create(self, validated_data):
-        instance, _ = Follow.objects.get_or_create(**validated_data)
-        return instance
+    def validate(self, data):
+        user = self.context['request'].user
+        following = User.objects.get(username=data['following'])
+        obj = Follow.objects.filter(
+            user=user,
+            following=following
+        )
+        if user == following:
+            raise serializers.ValidationError(
+                'You cannot subscribe to yourself'
+            )
+        elif obj.exists():
+            raise serializers.ValidationError(
+                'You are already subscribed to this user'
+            )
+        return data
+
+    #def create(self, validated_data):
+        #instance, _ = Follow.objects.get_or_create(**validated_data)
+        #return instance
 
     class Meta:
         fields = ('user', 'following')
