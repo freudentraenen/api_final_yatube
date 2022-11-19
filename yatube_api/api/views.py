@@ -74,15 +74,7 @@ class FollowViewSet(
         new_queryset = user.follows.all()
         return new_queryset
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def perform_create(self, serializer):
         serializer.save(
-            user=self.get_user(),
             following=self.get_following(serializer=serializer)
         )

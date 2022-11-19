@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator
 
 from posts.models import Comment, Post, Group, Follow
 
@@ -47,30 +48,33 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     user = SlugRelatedField(
-        read_only=True, slug_field='username'
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
+        queryset=User.objects.all()
     )
     following = SlugRelatedField(
         slug_field='username',
         queryset=User.objects.all()
     )
 
+    class Meta:
+        fields = ('user', 'following')
+        model = Follow
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=['user', 'following'],
+                message='You are already subscribed to this user'
+            )
+        ]
+
+    # не используется валидация для отдельного поля,
+    # т.к. для валидации требуются значения двух полей
     def validate(self, data):
-        user = self.context['request'].user
         following = User.objects.get(username=data['following'])
-        obj = Follow.objects.filter(
-            user=user,
-            following=following
-        )
+        user = data['user']
         if user == following:
             raise serializers.ValidationError(
                 'You cannot subscribe to yourself'
             )
-        elif obj.exists():
-            raise serializers.ValidationError(
-                'You are already subscribed to this user'
-            )
         return data
-
-    class Meta:
-        fields = ('user', 'following')
-        model = Follow
